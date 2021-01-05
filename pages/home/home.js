@@ -2,28 +2,47 @@ const app = getApp();
 Page({
   data:{
     name:'张三',
+    items: [],
+    inputValue: '',
     now: app.globalData.now
   },
+  inputHandler(event){
+    this.setData({
+      inputValue: event.detail.value || ''
+    })
+  },
   buttonHandler(event){
+    const newItem = this.data.inputValue.trim();
+    if (!newItem) return;
+    const itemArr = [...this.data.items, newItem];
+    wx.setStorageSync('items', itemArr);
+    this.setData({ items: itemArr });
+  
+  },
+
+  buttonHandler2(event){
+    if (!event.detail.userInfo) return;
+    this.setData({
+      name: event.detail.userInfo.nickName
+    });
+
+  },
+  buttonHandler3(event){
+    wx.navigateTo({
+      url: '../second/second'
+    });
+  },
+  onLoad() {
     const that=this;
-    wx.showModal({
-      title: '操作确认',
-      content: '你确认要修改吗？',
+    wx.request({
+      url: 'http://localhost:3000/items',
       success(res){
-        if(res.confirm){
-          that.setData({
-            name:'李四',
-          },function(){
-            wx.showToast({
-              title: '操作完成',
-              duration:700
-            });
-          });
-        }else if(res.cancel){
-          console.log("用户点击了取消")
-        }
+        that.setData({
+          items:res.data
+        })
       }
     })
-  
+    const itemArr = wx.getStorageSync('items') || [];
+    this.setData({ items: itemArr });
   }
 });
